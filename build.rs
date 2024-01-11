@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
-    let splinterdb_path = PathBuf::from("splinterdb");
+    let splinterdb_path = std::env::current_dir().unwrap().join("splinterdb");
     env::set_var("CC", "clang");
     env::set_var("LD", "clang");
 
