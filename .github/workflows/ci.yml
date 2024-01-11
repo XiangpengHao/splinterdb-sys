@@ -7,18 +7,20 @@ on:
   pull_request:
     branches: [ main ]
 
-  runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      RUST_BACKTRACE: 1 
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions-rs/toolchain@v1
-      name: Setup toolchain
-      with:
-          toolchain: nightly
-          override: true
-          components: rust-src
-    - run: sudo apt update && sudo apt install -y llvm-dev clang libxxhash-dev libaio-dev
-    - run: cargo test
+jobs:
+  build:
+    runs-on: ubuntu-latest
+      timeout-minutes: 30
+      env:
+        RUST_BACKTRACE: 1 
+      steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        name: Setup toolchain
+        with:
+            toolchain: nightly
+            override: true
+            components: rust-src
+      - run: sudo apt update && sudo apt install -y llvm-dev clang libxxhash-dev libaio-dev
+      - run: cargo test
  
