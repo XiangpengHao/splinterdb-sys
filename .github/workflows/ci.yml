@@ -13,11 +13,12 @@ jobs:
     timeout-minutes: 30
     env:
       RUST_BACKTRACE: 1 
+      CC: clang
+      LD: clang
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: 'recursive'
-
     - uses: actions-rs/toolchain@v1
       name: Setup toolchain
       with:
@@ -25,4 +26,5 @@ jobs:
           override: true
           components: rust-src
     - run: sudo apt update && sudo apt install -y llvm-dev clang libxxhash-dev libaio-dev
+    - run: cd splinterdb && make && sudo make install
     - run: cargo test

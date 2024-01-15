@@ -19,8 +19,8 @@ pub struct DBConfig {
 #[derive(Debug)]
 pub struct SplinterDB {
     _inner: *mut raw::splinterdb,
-    sdb_cfg: raw::splinterdb_config,
-    data_cfg: raw::data_config,
+    sdb_cfg: Box<raw::splinterdb_config>,
+    data_cfg: Box<raw::data_config>,
 }
 
 unsafe impl Sync for SplinterDB {}
@@ -173,13 +173,15 @@ fn path_as_cstring<P: AsRef<Path>>(path: P) -> std::ffi::CString {
     std::ffi::CString::new(as_str).unwrap()
 }
 
+pub const O_DIRECT: std::os::raw::c_int = 0x4000;
+
 impl SplinterDB {
     // Create a new SplinterDB object. This is uninitialized.
     pub fn new<T: rust_cfg::SdbRustDataFuncs>() -> SplinterDB {
         SplinterDB {
             _inner: std::ptr::null_mut(),
-            sdb_cfg: unsafe { std::mem::zeroed() },
-            data_cfg: new_sdb_data_config::<T>(0),
+            sdb_cfg: Box::new(unsafe { std::mem::zeroed() }),
+            data_cfg: Box::new(new_sdb_data_config::<T>(0)),
         }
     }
 
@@ -195,16 +197,19 @@ impl SplinterDB {
         self.sdb_cfg.filename = path.as_ptr();
         self.sdb_cfg.cache_size = cfg.cache_size_bytes as u64;
         self.sdb_cfg.disk_size = cfg.disk_size_bytes as u64;
-        self.sdb_cfg.data_cfg = &mut self.data_cfg;
+        self.sdb_cfg.data_cfg = self.data_cfg.as_mut();
+        self.sdb_cfg.num_memtable_bg_threads = 2;
+        self.sdb_cfg.num_normal_bg_threads = 2;
+        self.sdb_cfg.io_flags |= O_DIRECT;
 
         // set key bytes
         self.data_cfg.max_key_size = cfg.max_key_size as u64;
 
         // Open or create the database
         let rc = if open_existing {
-            unsafe { raw::splinterdb_open(&self.sdb_cfg, &mut self._inner) }
+            unsafe { raw::splinterdb_open(self.sdb_cfg.as_ref(), &mut self._inner) }
         } else {
-            unsafe { raw::splinterdb_create(&self.sdb_cfg, &mut self._inner) }
+            unsafe { raw::splinterdb_create(self.sdb_cfg.as_ref(), &mut self._inner) }
         };
         as_result(rc)
     }
