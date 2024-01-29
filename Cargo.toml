@@ -11,6 +11,7 @@ bindgen = "0.69.1"
 
 [dependencies]
 hex = "0.4"
+libc = "0.2.152"
 xxhash-rust = { version = "0.8.6", features = ["xxh32"] }
 
 [dev-dependencies]

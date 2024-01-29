@@ -200,7 +200,9 @@ impl SplinterDB {
         self.sdb_cfg.data_cfg = self.data_cfg.as_mut();
         self.sdb_cfg.num_memtable_bg_threads = 2;
         self.sdb_cfg.num_normal_bg_threads = 2;
-        self.sdb_cfg.io_flags |= O_DIRECT;
+        self.sdb_cfg.io_flags |= libc::O_DIRECT;
+        self.sdb_cfg.io_flags |= libc::O_RDWR;
+        self.sdb_cfg.io_flags |= libc::O_CREAT;
 
         // set key bytes
         self.data_cfg.max_key_size = cfg.max_key_size as u64;
@@ -273,7 +275,7 @@ impl SplinterDB {
 
             // TODO: Can we avoid this memory init and copy?
             let mut value: Vec<u8> = vec![0; val.length as usize];
-            std::ptr::copy(
+            std::ptr::copy_nonoverlapping(
                 val.data,
                 std::mem::transmute(value.as_mut_ptr()),
                 val.length as usize,
